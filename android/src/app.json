@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "AI Communication Assistant",
+    "slug": "ai-communication-assistant",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.aicommunication.assistant",
+      "permissions": ["CAMERA", "INTERNET"]
+    }
+  }
+}

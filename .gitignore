@@ -1,0 +1,51 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Python virtual environments
+venv/
+venv311/
+.venv/
+backend/venv/
+backend/venv311/
+
+# Python local data
+backend/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files
+.env
+.env.*
+!.env.example
+frontend/.env
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Flutter
+mobile/.dart_tool/
+mobile/.packages/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dataset - do NOT upload training videos
+backend/ISL_DATASET/
+backend/model/dataset/
+
+# Temporary files
+*.log
+*.tmp
