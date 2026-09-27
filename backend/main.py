@@ -1,3 +1,4 @@
+﻿from pathlib import Path
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -20,7 +21,7 @@ import os
 # REAL ISL SIGN LANGUAGE MODEL
 # ============================================================
 
-MODEL_PATH = r"C:\communcation\backend\model\trained_model\isl_sign_model.pkl"
+MODEL_PATH = rstr(Path(__file__).resolve().parent / "model" / "trained_model" / "isl_sign_model.pkl")
 
 
 # ============================================================
@@ -61,7 +62,7 @@ hands = mp_hands.Hands(
 def detect_sign(frame):
 
     # --------------------------------------------------------
-    # BGR → RGB
+    # BGR â†’ RGB
     # --------------------------------------------------------
 
     rgb_frame = cv2.cvtColor(
@@ -93,7 +94,7 @@ def detect_sign(frame):
 
 
     # --------------------------------------------------------
-    # 21 LANDMARKS × X,Y,Z
+    # 21 LANDMARKS Ã— X,Y,Z
     # --------------------------------------------------------
 
     points = np.array(
@@ -140,7 +141,7 @@ def detect_sign(frame):
 
     # --------------------------------------------------------
     # FLATTEN
-    # 21 × 3 = 63 FEATURES
+    # 21 Ã— 3 = 63 FEATURES
     # --------------------------------------------------------
 
     features = points.flatten()
@@ -373,7 +374,7 @@ async def sign_camera(
 
 
     # --------------------------------------------------------
-    # BYTES → NUMPY
+    # BYTES â†’ NUMPY
     # --------------------------------------------------------
 
     image_array = np.frombuffer(
