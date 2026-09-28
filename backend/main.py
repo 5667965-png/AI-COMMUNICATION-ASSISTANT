@@ -21,7 +21,7 @@ import os
 # REAL ISL SIGN LANGUAGE MODEL
 # ============================================================
 
-MODEL_PATH = rstr(Path(__file__).resolve().parent / "model" / "trained_model" / "isl_sign_model.pkl")
+MODEL_PATH = str(Path(__file__).resolve().parent / "model" / "trained_model" / "isl_sign_model.pkl")
 
 
 # ============================================================
@@ -444,3 +444,5 @@ print(" CAMERA API READY")
 print(" COMMAND ENGINE READY")
 print(" API READY")
 print("======================================")
+
+

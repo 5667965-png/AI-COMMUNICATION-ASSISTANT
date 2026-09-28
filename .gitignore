@@ -2,21 +2,19 @@
 __pycache__/
 *.py[cod]
 *.pyd
-
-# Python virtual environments
 venv/
 venv311/
 .venv/
 backend/venv/
 backend/venv311/
 
-# Python local data
+# Local database
 backend/data/
 *.db
 *.sqlite
 *.sqlite3
 
-# Environment files
+# Environment
 .env
 .env.*
 !.env.example
@@ -42,10 +40,14 @@ mobile/.flutter-plugins-dependencies
 .DS_Store
 Thumbs.db
 
-# Dataset - do NOT upload training videos
+# Training dataset
 backend/ISL_DATASET/
 backend/model/dataset/
 
-# Temporary files
+# Temporary
 *.log
 *.tmp
+
+# Backups
+*.backup
+*.bak
