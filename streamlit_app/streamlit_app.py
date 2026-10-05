@@ -11,13 +11,24 @@ Deploy steps (see streamlit_app/DEPLOY.md for the full guide):
 """
 
 import io
+import sys
+import types
 from pathlib import Path
 
 import streamlit as st
 import numpy as np
-import cv2
 import joblib
+
+try:
+    import cv2  # noqa: F401  (MediaPipe imports cv2 for its drawing helpers)
+except ImportError:
+    # Streamlit Cloud installs the GUI OpenCV that MediaPipe depends on, and
+    # that build cannot load without libGL. This app never calls cv2 directly
+    # (Pillow/numpy do the image work), so a stub satisfies MediaPipe's import.
+    sys.modules["cv2"] = types.ModuleType("cv2")
+
 import mediapipe as mp
+from PIL import Image
 from gtts import gTTS
 
 # ============================================================
@@ -40,26 +51,28 @@ def load_sign_model():
 
 @st.cache_resource(show_spinner=False)
 def get_hands():
-    # Captured frames are processed as static images.
-    return mp.solutions.hands.Hands(
-        static_image_mode=True,
-        max_num_hands=1,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
+    # MediaPipe Tasks API (mediapipe>=0.10.35 removed the old mp.solutions API).
+    model_path = Path(__file__).resolve().parent / "models" / "hand_landmarker.task"
+    options = mp.tasks.vision.HandLandmarkerOptions(
+        base_options=mp.tasks.BaseOptions(model_asset_path=str(model_path)),
+        num_hands=1,
+        min_hand_detection_confidence=0.5,
+        min_hand_presence_confidence=0.5,
+        running_mode=mp.tasks.vision.RunningMode.IMAGE,
     )
+    return mp.tasks.vision.HandLandmarker.create_from_options(options)
 
 
 def detect_sign(frame, model, hands):
     """Detect one ISL sign from a BGR image frame."""
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    result = hands.process(rgb)
+    rgb = np.ascontiguousarray(frame[..., ::-1])  # BGR -> RGB
+    result = hands.detect(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb))
 
-    if not result.multi_hand_landmarks:
+    if not result.hand_landmarks:
         return {"sign": "No hand detected", "confidence": 0.0}
 
-    landmarks = result.multi_hand_landmarks[0]
     points = np.array(
-        [[lm.x, lm.y, lm.z] for lm in landmarks.landmark], dtype=np.float32
+        [[lm.x, lm.y, lm.z] for lm in result.hand_landmarks[0]], dtype=np.float32
     )
 
     # Wrist-relative normalization (translation invariant).
@@ -437,7 +450,11 @@ elif page == "🤟 ISL Detection":
             image_bytes = up.getvalue()
 
     if image_bytes is not None:
-        frame = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+        # Pillow decodes to RGB; flip to BGR so the display and detection code
+        # (which expect a BGR frame, like the old cv2.imdecode produced) work on.
+        frame = np.ascontiguousarray(
+            np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB"))[..., ::-1]
+        )
         col_l, col_r = st.columns(2)
         with col_l:
             st.image(frame, channels="BGR", caption="Captured frame")

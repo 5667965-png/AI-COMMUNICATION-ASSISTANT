@@ -1,10 +1,16 @@
 # Dependencies for the Streamlit online edition
+# Streamlit Community Cloud runs Python 3.14 — versions must ship cp314/abi3 wheels.
+#
+# - mediapipe>=0.10.35,<1.0: 0.10.21 has no Python 3.14 wheels; 1.0.x may change
+#   the Tasks API. 0.10.35 provides mp.tasks.vision.HandLandmarker (used below).
+# - numpy>=2.0: numpy 1.26.x requires Python <3.13.
+# - No opencv pin: MediaPipe pulls the GUI opencv-contrib-python, which cannot
+#   load on headless clouds (missing libGL). The app never calls cv2 directly —
+#   it stubs cv2 before importing mediapipe and uses Pillow/numpy for images.
+
 streamlit>=1.31
-numpy==1.26.4
-opencv-python-headless==4.11.0.86
-joblib==1.6.0
-scikit-learn==1.9.1
-mediapipe==0.10.21
-gtts==2.5.4
-# MediaPipe requires protobuf 4.x (do not upgrade)
-protobuf==4.25.9
+numpy>=2.0
+joblib>=1.4
+scikit-learn>=1.9
+mediapipe>=0.10.35,<1.0
+gtts>=2.5

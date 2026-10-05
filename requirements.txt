@@ -1,12 +1,14 @@
 # Dependencies for the Streamlit online edition
-# Streamlit Community Cloud installs this file from the repository root.
+# Streamlit Community Cloud installs streamlit_app/requirements.txt (the directory
+# that holds the main module). This root copy is kept in sync for reference.
+#
+# Python 3.14 note: mediapipe>=0.10.35,<1.0 and numpy>=2.0 are required —
+# mediapipe 0.10.21 and numpy 1.26.4 have no Python 3.14 wheels. See the
+# streamlit_app copy for the full explanation (including the OpenCV/libGL note).
 
 streamlit>=1.31
-numpy==1.26.4
-opencv-python-headless==4.11.0.86
-joblib==1.6.0
-scikit-learn==1.9.1
-mediapipe==0.10.21
-gtts==2.5.4
-# MediaPipe requires protobuf 4.x (do not upgrade)
-protobuf==4.25.9
+numpy>=2.0
+joblib>=1.4
+scikit-learn>=1.9
+mediapipe>=0.10.35,<1.0
+gtts>=2.5
