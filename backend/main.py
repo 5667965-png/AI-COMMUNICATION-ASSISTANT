@@ -232,6 +232,15 @@ app.add_middleware(
         "capacitor://localhost"
     ],
 
+    # Phones and other devices on the local Wi-Fi open the
+    # frontend through the computer's LAN address, for example
+    # http://192.168.0.106:5173. The Android emulator reaches
+    # the computer through 10.0.2.2. Allow both.
+    allow_origin_regex=(
+        r"^https?://(localhost|127\.0\.0\.1|10\.0\.2\.2"
+        r"|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?$"
+    ),
+
     allow_credentials=True,
 
     allow_methods=["*"],

@@ -1,15 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import "./Auth.css";
+import "./QuickFeatures.css";
+import QuickFeatures from "./QuickFeatures.jsx";
 
 // Android emulators reach the development computer through 10.0.2.2.
 // Physical devices should set VITE_API_URL to the computer's LAN address.
-const API =
-  import.meta.env.VITE_API_URL ||
-  (window.location.protocol === "capacitor:" ||
-  window.location.protocol === "file:"
-    ? "http://10.0.2.2:8000"
-    : "http://127.0.0.1:8000");
+const getDefaultApiUrl = () => {
+  if (window.location.protocol === "capacitor:" ||
+      window.location.protocol === "file:") {
+    // Android emulator -> development computer.
+    return "http://10.0.2.2:8000";
+  }
+
+  // Browser on the laptop or another device on the same Wi-Fi.
+  // This automatically uses the same host that served the frontend.
+  const host = window.location.hostname || "127.0.0.1";
+  return `http://${host}:8000`;
+};
+
+const API = import.meta.env.VITE_API_URL || getDefaultApiUrl();
 
 const AUTH_TOKEN_KEY = "aca_auth_token";
 
@@ -34,7 +44,6 @@ function App() {
   const [authError, setAuthError] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
-  const [adminLoading, setAdminLoading] = useState(false);
   const [adminStats, setAdminStats] = useState(null);
   const [adminUsers, setAdminUsers] = useState([]);
   const [adminHistory, setAdminHistory] = useState([]);
@@ -67,7 +76,6 @@ function App() {
   // ============================================================
 
   const [backendStatus, setBackendStatus] = useState("Checking...");
-  const [backendResponse, setBackendResponse] = useState("");
 
   // ============================================================
   // DETECTION
@@ -82,7 +90,6 @@ function App() {
   // ============================================================
 
   const [lastCommand, setLastCommand] = useState(null);
-  const [commandHistory, setCommandHistory] = useState([]);
 
   // ============================================================
   // APP FEATURES
@@ -260,8 +267,6 @@ function App() {
 
     setLastCommand(item);
 
-    setCommandHistory((old) => [item, ...old].slice(0, 20));
-
     return item;
   };
 
@@ -331,17 +336,42 @@ function App() {
 
         if (historyResponse.ok) {
           const data = await historyResponse.json();
-          setHistory(data.history || data.items || []);
+          const rows = Array.isArray(data.history) ? data.history : [];
+          setHistory(
+            rows.map((row) => ({
+              id: row.id ?? Date.now() + Math.random(),
+              type: row.source || "COMMUNICATION",
+              value: row.message || "",
+              time: row.created_at
+                ? new Date(row.created_at).toLocaleString()
+                : "",
+            }))
+          );
         }
 
         if (favoritesResponse.ok) {
           const data = await favoritesResponse.json();
-          setFavorites(data.favorites || data.items || []);
+          const rows = Array.isArray(data.favorites) ? data.favorites : [];
+          setFavorites(
+            rows
+              .map((row) =>
+                typeof row === "string" ? row : row?.message
+              )
+              .filter(Boolean)
+          );
         }
 
         if (contactsResponse.ok) {
           const data = await contactsResponse.json();
-          setEmergencyContacts(data.contacts || data.items || []);
+          const rows = Array.isArray(data.contacts) ? data.contacts : [];
+          // Keep the existing UI/state simple: emergencyContacts stores phone strings.
+          setEmergencyContacts(
+            rows
+              .map((row) =>
+                typeof row === "string" ? row : row?.phone
+              )
+              .filter(Boolean)
+          );
         }
       } catch (error) {
         console.error("User data load error:", error);
@@ -842,11 +872,7 @@ const capitalizeFirst = (value) => {
       // STABILITY
       // --------------------------------------------------------
 
-      const historyLength =
-        predictionHistory.current.length;
-
-      const requiredVotes =
-        historyLength >= 6 ? 4 : 4;
+      const requiredVotes = 4;
 
       if (
         majorityCount < requiredVotes ||
@@ -1031,10 +1057,6 @@ const capitalizeFirst = (value) => {
         throw new Error("Message failed");
       }
 
-      const data = await response.json();
-
-      setBackendResponse(data.message);
-
       addHistory("TEXT", text);
     } catch (error) {
       console.error(error);
@@ -1113,8 +1135,21 @@ const capitalizeFirst = (value) => {
 
   const sendEmergency = async () => {
     const message = emergencyMessage.trim();
-    if (!message) { alert("Please enter an emergency message."); return; }
-    if (emergencyContacts.length === 0) { alert("No emergency contacts saved. Add contacts in Settings."); return; }
+    if (!message) {
+      alert("Please enter an emergency message.");
+      return;
+    }
+
+    if (emergencyContacts.length === 0) {
+      alert("No emergency contacts saved. Add contacts in Settings.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Send this emergency message to ${emergencyContacts[0]}?\n\n${message}`
+    );
+
+    if (!confirmed) return;
 
     let finalMessage = message;
     if (locationEnabled && navigator.geolocation) {
@@ -1344,7 +1379,6 @@ const capitalizeFirst = (value) => {
   };
 
   const loadAdminDashboard = async () => {
-    setAdminLoading(true);
     try {
       const [statsRes, usersRes, historyRes, contactsRes] = await Promise.all([
         adminFetch("/api/admin/stats"),
@@ -1358,8 +1392,6 @@ const capitalizeFirst = (value) => {
       if (contactsRes.ok) setAdminContacts((await contactsRes.json()).contacts || []);
     } catch (error) {
       console.error("Admin dashboard error:", error);
-    } finally {
-      setAdminLoading(false);
     }
   };
 
@@ -1421,6 +1453,7 @@ const capitalizeFirst = (value) => {
   const navItems = [
     ["home", "🏠", "Home"],
     ["communication", "🤟", "ISL Communication"],
+    ["quick", "⚡", "Quick Help"],
     ["conversation", "💬", "Conversation"],
     ["favorites", "⭐", "Favorites"],
     ["history", "🕘", "History"],
@@ -1564,7 +1597,7 @@ const capitalizeFirst = (value) => {
             </button>
 
             <p className="auth-security-note">
-              🔒 Your password is stored as a secure hash in the local SQLite database.
+              🔒 Your password is handled by the backend authentication service.
             </p>
           </div>
         </div>
@@ -1684,6 +1717,9 @@ const capitalizeFirst = (value) => {
 
               {activePage === "communication" &&
                 "ISL Communication"}
+
+              {activePage === "quick" &&
+                "Quick Help - Handicapped Support"}
 
               {activePage === "conversation" &&
                 "Two-Way Conversation"}
@@ -2376,8 +2412,8 @@ const capitalizeFirst = (value) => {
                   <h2>🚨 Emergency Center</h2>
                   <p>
                     Double-tap the emergency button
-                    to prepare contact with a saved
-                    emergency contact.
+                    to open the SMS workflow for your
+                    first saved emergency contact.
                   </p>
                 </div>
 
@@ -2642,6 +2678,21 @@ const capitalizeFirst = (value) => {
               </div>
             </section>
           </>
+        )}
+
+        {/* ======================================================
+            QUICK FEATURES (Handicapped Persons)
+        ====================================================== */}
+
+        {activePage === "quick" && (
+          <QuickFeatures
+            onSendMessage={(msg) => {
+              setText(msg);
+              addHistory("QUICK", msg);
+            }}
+            onSpeak={speakTextValue}
+            emergencyContacts={emergencyContacts}
+          />
         )}
 
         {/* ======================================================

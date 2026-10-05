@@ -1,0 +1,10 @@
+# Dependencies for the Streamlit online edition
+streamlit>=1.31
+numpy==1.26.4
+opencv-python-headless==4.11.0.86
+joblib==1.6.0
+scikit-learn==1.9.1
+mediapipe==0.10.21
+gtts==2.5.4
+# MediaPipe requires protobuf 4.x (do not upgrade)
+protobuf==4.25.9
